@@ -51,8 +51,19 @@ class FinalizarLeilaoServiceTest {
         List<Leilao> leiloesExpirados = leilaoDao.buscarLeiloesExpirados();
         Leilao leilao = leiloesExpirados.get(0);
         service.finalizarLeiloesExpirados();
-
         Mockito.verify(enviadorDeEmails).enviarEmailVencedorLeilao(leilao.getLanceVencedor());
+    }
+
+    @Test
+    void naoDeveriaEnviarEmailParaVencedorDoLeilaoEmCasoDeErroAoEncerrarOLeilao() {
+        Mockito.when(leilaoDao.buscarLeiloesExpirados()).thenReturn(leiloes());
+        Mockito.when(leilaoDao.salvar(Mockito.any())).thenThrow(RuntimeException.class);
+
+        try {
+            service.finalizarLeiloesExpirados();
+            Mockito.verifyNoInteractions(enviadorDeEmails);
+        }catch (Exception e) {
+        }
     }
 
     private List<Leilao> leiloes() {
