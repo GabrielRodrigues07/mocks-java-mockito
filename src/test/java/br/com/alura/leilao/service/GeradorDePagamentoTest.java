@@ -3,14 +3,14 @@ package br.com.alura.leilao.service;
 import br.com.alura.leilao.dao.PagamentoDao;
 import br.com.alura.leilao.model.Lance;
 import br.com.alura.leilao.model.Leilao;
+import br.com.alura.leilao.model.Pagamento;
 import br.com.alura.leilao.model.Usuario;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+import org.mockito.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -20,6 +20,9 @@ class GeradorDePagamentoTest {
 
     @Mock
     private PagamentoDao pagamentoDao;
+
+    @Captor
+    private ArgumentCaptor<Pagamento> captor;
 
     @BeforeEach
     public void init() {
@@ -32,7 +35,15 @@ class GeradorDePagamentoTest {
         Leilao leilao = leilao();
         Lance lance = leilao.getLanceVencedor();
         geradorDePagamento.gerarPagamento(lance);
-        Mockito.verify(pagamentoDao).salvar(Mockito.any());
+        Mockito.verify(pagamentoDao).salvar(captor.capture());
+
+        Pagamento pagamento = captor.getValue();
+
+        assertEquals(leilao, pagamento.getLeilao());
+        assertEquals(LocalDate.now().plusDays(1), pagamento.getVencimento());
+        assertEquals(lance.getValor(), pagamento.getValor());
+        assertEquals(lance.getUsuario(), pagamento.getUsuario());
+        assertFalse(pagamento.getPago());
     }
 
     private Leilao leilao() {
